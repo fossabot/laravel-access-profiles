@@ -5,8 +5,13 @@ namespace Seisigma\AccessProfiles;
 use Illuminate\Support\ServiceProvider;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
 use Seisigma\AccessProfiles\Commands\CensusCommand;
+use Seisigma\AccessProfiles\Contracts\ProfileConditions;
+use Seisigma\AccessProfiles\Contracts\Resolver;
 use Seisigma\AccessProfiles\Contracts\ScopeOwnership;
+use Seisigma\AccessProfiles\Resolver\DatabaseResolver;
+use Seisigma\AccessProfiles\Resolver\RequestMemo;
 use Seisigma\AccessProfiles\Support\DefaultScopeOwnership;
+use Seisigma\AccessProfiles\Support\NoConditions;
 
 /**
  * Plain service provider on purpose: the package keeps its runtime
@@ -22,6 +27,13 @@ class AccessProfilesServiceProvider extends ServiceProvider
         $this->app->bind(ScopeOwnership::class, fn ($app) => $app->make(
             config('access-profiles.bindings.'.ScopeOwnership::class, DefaultScopeOwnership::class)
         ));
+        $this->app->bind(ProfileConditions::class, fn ($app) => $app->make(
+            config('access-profiles.bindings.'.ProfileConditions::class, NoConditions::class)
+        ));
+        $this->app->bind(Resolver::class, fn ($app) => $app->make(
+            config('access-profiles.bindings.'.Resolver::class, DatabaseResolver::class)
+        ));
+        $this->app->scoped(RequestMemo::class);
     }
 
     public function boot(): void
