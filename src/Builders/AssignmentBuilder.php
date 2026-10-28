@@ -16,39 +16,7 @@ use Seisigma\AccessProfiles\Models\Profile;
  */
 abstract class AssignmentBuilder
 {
-    protected ?Model $grantor = null;
-
-    protected bool $system = false;
-
-    protected ?string $reason = null;
-
-    public function by(Model $grantor): static
-    {
-        $this->grantor = $grantor;
-        $this->system = false;
-
-        return $this;
-    }
-
-    /**
-     * A write the package host makes on its own (seed, backfill, cleanup).
-     * It skips the escalation and self checks; every other guard still runs.
-     */
-    public function bySystem(string $reason): static
-    {
-        $this->grantor = null;
-        $this->system = true;
-        $this->reason = $reason;
-
-        return $this;
-    }
-
-    public function because(string $reason): static
-    {
-        $this->reason = $reason;
-
-        return $this;
-    }
+    use RecordsActor;
 
     /**
      * @param  list<Model>  $scopes  empty = the whole tenant

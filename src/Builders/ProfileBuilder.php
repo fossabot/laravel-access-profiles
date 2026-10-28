@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
+use Seisigma\AccessProfiles\Events\ProfileCreated;
+use Seisigma\AccessProfiles\Events\ProfileDeleted;
+use Seisigma\AccessProfiles\Events\ProfileUpdated;
+use Seisigma\AccessProfiles\Events\Snapshot;
 use Seisigma\AccessProfiles\Exceptions\GrantRejected;
 use Seisigma\AccessProfiles\Guards\TenantConsistency;
+use Seisigma\AccessProfiles\Models\Assignment;
 use Seisigma\AccessProfiles\Models\Profile;
 use Seisigma\AccessProfiles\Support\TenantVersion;
 
@@ -21,6 +26,8 @@ use Seisigma\AccessProfiles\Support\TenantVersion;
  */
 class ProfileBuilder
 {
+    use RecordsActor;
+
     private ?Model $tenant = null;
 
     private ?string $name = null;
@@ -87,6 +94,8 @@ class ProfileBuilder
                 throw new GrantRejected(GrantRejected::SYSTEM_TEMPLATE);
             }
 
+            $before = $profile === null ? null : Snapshot::profile($profile);
+
             $profile ??= new Profile([
                 'key' => $this->key,
                 'name' => $this->key,
@@ -117,6 +126,11 @@ class ProfileBuilder
             }
 
             DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+
+            $after = Snapshot::profile($profile->refresh());
+            event($before === null
+                ? new ProfileCreated($this->grantor, $this->system, $this->reason, null, $after)
+                : new ProfileUpdated($this->grantor, $this->system, $this->reason, $before, $after));
 
             return $profile->refresh();
         });
@@ -153,8 +167,34 @@ class ProfileBuilder
             }
 
             DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+            event(new ProfileCreated($this->grantor, $this->system, $this->reason, null, Snapshot::profile($copy->refresh())));
 
             return $copy->refresh();
+        });
+    }
+
+    public function delete(): Profile
+    {
+        $tenant = $this->tenant();
+
+        return DB::transaction(function () use ($tenant): Profile {
+            $profile = $this->stored($tenant)->lockForUpdate()->first()
+                ?? throw new GrantRejected(GrantRejected::UNKNOWN_PROFILE);
+
+            if ($profile->getAttribute('is_system')) {
+                throw new GrantRejected(GrantRejected::SYSTEM_TEMPLATE);
+            }
+
+            if (Assignment::query()->where('profile_id', $profile->getKey())->active(now())->lockForUpdate()->first() !== null) {
+                throw new GrantRejected(GrantRejected::PROFILE_IN_USE);
+            }
+
+            $before = Snapshot::profile($profile);
+            $profile->delete();
+            DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+            event(new ProfileDeleted($this->grantor, $this->system, $this->reason, $before, Snapshot::profile($profile)));
+
+            return $profile;
         });
     }
 

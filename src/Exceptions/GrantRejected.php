@@ -44,6 +44,8 @@ class GrantRejected extends RuntimeException
 
     public const DUPLICATE_PROFILE = 'duplicate_profile';
 
+    public const PROFILE_IN_USE = 'profile_in_use';
+
     public function __construct(public readonly string $reason)
     {
         parent::__construct('Grant rejected: '.$reason);
