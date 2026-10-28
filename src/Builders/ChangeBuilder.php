@@ -5,6 +5,8 @@ namespace Seisigma\AccessProfiles\Builders;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Seisigma\AccessProfiles\Events\AssignmentUpdated;
+use Seisigma\AccessProfiles\Events\Snapshot;
 use Seisigma\AccessProfiles\Exceptions\GrantRejected;
 use Seisigma\AccessProfiles\Guards\HostRules;
 use Seisigma\AccessProfiles\Guards\ProtectedProfiles;
@@ -65,6 +67,7 @@ class ChangeBuilder extends AssignmentBuilder
     {
         return DB::transaction(function (): Assignment {
             $row = self::lockLive($this->assignment);
+            $before = Snapshot::assignment($row);
             $tenant = self::tenantOf($row);
             $holder = $row->holder()->getResults() ?? throw new GrantRejected(GrantRejected::MISSING_HOLDER);
             $profile = Profile::withTrashed()->whereKey($row->getAttribute('profile_id'))->firstOrFail();
@@ -103,6 +106,7 @@ class ChangeBuilder extends AssignmentBuilder
             $row->save();
 
             DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+            event(new AssignmentUpdated($this->grantor, $this->system, $this->reason, $before, Snapshot::assignment($row->refresh())));
 
             return $row;
         });
