@@ -1,0 +1,80 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $tables = config('access-profiles.tables');
+
+        // A profile is a named set of allow/deny rules. tenant = null means a
+        // system template (read-only); a tenant row is that tenant's copy.
+        Schema::create($tables['profiles'], function (Blueprint $table) use ($tables) {
+            $table->id();
+            $table->nullableMorphs('tenant');
+            $table->string('key');
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->foreignId('based_on_id')->nullable()->constrained($tables['profiles'])->nullOnDelete();
+            $table->boolean('is_system')->default(false);
+            $table->string('requires_condition')->nullable();
+            $table->unsignedInteger('version')->default(1);
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['tenant_type', 'tenant_id', 'key']);
+        });
+
+        Schema::create($tables['profile_permissions'], function (Blueprint $table) use ($tables) {
+            $table->id();
+            $table->foreignId('profile_id')->constrained($tables['profiles'])->cascadeOnDelete();
+            $table->string('permission');
+            $table->enum('effect', ['allow', 'deny'])->default('allow');
+
+            $table->unique(['profile_id', 'permission']);
+        });
+
+        // One row per holder × profile × tenant. covers_tenant = true means the
+        // whole tenant; false means only the scopes listed in assignment_scopes.
+        Schema::create($tables['assignments'], function (Blueprint $table) use ($tables) {
+            $table->id();
+            $table->morphs('tenant');
+            $table->morphs('holder');
+            $table->foreignId('profile_id')->constrained($tables['profiles'])->restrictOnDelete();
+            $table->unsignedInteger('profile_version');
+            $table->boolean('covers_tenant')->default(true);
+            $table->string('title')->nullable();
+            $table->timestamp('valid_from')->nullable();
+            $table->timestamp('valid_until')->nullable();
+            $table->nullableMorphs('granted_by');
+            $table->text('reason')->nullable();
+            $table->timestamp('revoked_at')->nullable();
+            $table->nullableMorphs('revoked_by');
+            $table->text('revoke_reason')->nullable();
+            $table->timestamps();
+
+            $table->index(['tenant_type', 'tenant_id', 'holder_type', 'holder_id', 'revoked_at'], 'access_assignments_lookup_index');
+        });
+
+        Schema::create($tables['assignment_scopes'], function (Blueprint $table) use ($tables) {
+            $table->id();
+            $table->foreignId('assignment_id')->constrained($tables['assignments'])->cascadeOnDelete();
+            $table->morphs('scope');
+
+            $table->unique(['assignment_id', 'scope_type', 'scope_id'], 'access_assignment_scopes_unique');
+        });
+    }
+
+    public function down(): void
+    {
+        $tables = config('access-profiles.tables');
+
+        Schema::dropIfExists($tables['assignment_scopes']);
+        Schema::dropIfExists($tables['assignments']);
+        Schema::dropIfExists($tables['profile_permissions']);
+        Schema::dropIfExists($tables['profiles']);
+    }
+};

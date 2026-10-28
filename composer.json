@@ -1,0 +1,73 @@
+{
+    "name": "seisigma/laravel-access-profiles",
+    "description": "Scoped access profiles for multi-tenant Laravel apps: per-scope assignments, deny rules, validity windows and an audit trail, on top of Laravel's Gate.",
+    "keywords": [
+        "seisigma",
+        "laravel",
+        "authorization",
+        "permissions",
+        "multi-tenant",
+        "access-profiles"
+    ],
+    "homepage": "https://github.com/seisigma/laravel-access-profiles",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ricardo A. Vargas R.",
+            "email": "im@ricardovargas.me",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^11.0||^12.0||^13.0",
+        "illuminate/database": "^11.0||^12.0||^13.0",
+        "illuminate/support": "^11.0||^12.0||^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "nunomaduro/collision": "^8.1",
+        "orchestra/testbench": "^11.0||^10.0||^9.0",
+        "pestphp/pest": "^3.0||^4.0",
+        "pestphp/pest-plugin-arch": "^3.0||^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0||^4.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Seisigma\\AccessProfiles\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Seisigma\\AccessProfiles\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@composer run prepare",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Seisigma\\AccessProfiles\\AccessProfilesServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
