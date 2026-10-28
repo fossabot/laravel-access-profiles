@@ -75,8 +75,15 @@ class ChangeBuilder extends AssignmentBuilder
                 throw new GrantRejected(GrantRejected::NO_SCOPES);
             }
 
+            $consistency = app(TenantConsistency::class);
+
+            // A row that is live after the change must not sit beside another live row (an ended row brought back).
+            if (TenantConsistency::endsAfter($until, now())) {
+                $consistency->noDuplicate($holder, $profile, $tenant, now(), except: $row->getKey());
+            }
+
             $scopes = $this->scopes ?? $this->currentScopes($row);
-            app(TenantConsistency::class)->scopes($scopes, $tenant);
+            $consistency->scopes($scopes, $tenant);
             $this->guardActor($holder, $profile, $tenant, $scopes, escalation: true);
             app(HostRules::class)->check($holder, $profile, $tenant, $scopes);
 
