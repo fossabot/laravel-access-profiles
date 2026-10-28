@@ -12,6 +12,7 @@ use Seisigma\AccessProfiles\Enums\Effect;
 use Seisigma\AccessProfiles\Models\Assignment;
 use Seisigma\AccessProfiles\Models\AssignmentScope;
 use Seisigma\AccessProfiles\Models\ProfileRule;
+use Seisigma\AccessProfiles\Queries\ScopeSet;
 
 /**
  * The decision rules of DESIGN §2.1. Grant sets come from the request memo,
@@ -52,6 +53,17 @@ class DatabaseResolver implements Resolver
         sort($keys);
 
         return $keys;
+    }
+
+    public function scopesWhere(Model $holder, string $permission, Model $target): ScopeSet
+    {
+        if (! $this->tokenAllows($holder, $permission)) {
+            return ScopeSet::none();
+        }
+
+        $tenant = $this->ownership->tenantOf($target);
+
+        return ScopeSet::fromEntries($this->conditionOn($this->grants($holder, $tenant)->active(now()), $tenant), $permission);
     }
 
     public function grants(Model $holder, Model $tenant): GrantSet
@@ -98,10 +110,21 @@ class DatabaseResolver implements Resolver
      */
     private function entriesFor(GrantSet $set, Model $target, Model $tenant): array
     {
+        return $this->conditionOn($set->covering($target, $target->is($tenant), now()), $tenant);
+    }
+
+    /**
+     * The entries whose profile has no condition or a condition that is on.
+     *
+     * @param  list<array{assignment: int, profile: string, covers_tenant: bool, scopes: list<string>, allow: list<string>, deny: list<string>, valid_from: int|null, valid_until: int|null, condition: string|null}>  $entries
+     * @return list<array{assignment: int, profile: string, covers_tenant: bool, scopes: list<string>, allow: list<string>, deny: list<string>, valid_from: int|null, valid_until: int|null, condition: string|null}>
+     */
+    private function conditionOn(array $entries, Model $tenant): array
+    {
         $conditions = [];
 
         return array_values(array_filter(
-            $set->covering($target, $target->is($tenant), now()),
+            $entries,
             function (array $entry) use ($tenant, &$conditions): bool {
                 $condition = $entry['condition'];
 
