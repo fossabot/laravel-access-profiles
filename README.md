@@ -1,6 +1,7 @@
 # Laravel Access Profiles
 
-> **Status: design draft.** The API below is the planned API ([docs/DESIGN.md](docs/DESIGN.md)). Nothing is released yet.
+> **Status: design approved, not built yet.** The API below is the planned API ([docs/DESIGN.md](docs/DESIGN.md)). Nothing is released yet.
+> Requires PHP 8.3+ and Laravel 12 or 13.
 
 **Give people different powers in different parts of the same tenant — with deny rules, expiry dates and a record of who granted what, and why.**
 
@@ -20,7 +21,7 @@ Each point links to the row in [docs/COMPARISON.md](docs/COMPARISON.md) that bac
 ## Installation
 
 ```bash
-composer require seisigma/laravel-access-profiles
+composer require seisigmasrl/laravel-access-profiles
 php artisan vendor:publish --tag=access-profiles-migrations
 php artisan vendor:publish --tag=access-profiles-config
 php artisan migrate

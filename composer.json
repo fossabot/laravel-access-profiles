@@ -1,5 +1,5 @@
 {
-    "name": "seisigma/laravel-access-profiles",
+    "name": "seisigmasrl/laravel-access-profiles",
     "description": "Scoped access profiles for multi-tenant Laravel apps: per-scope assignments, deny rules, validity windows and an audit trail, on top of Laravel's Gate.",
     "keywords": [
         "seisigma",
@@ -9,7 +9,7 @@
         "multi-tenant",
         "access-profiles"
     ],
-    "homepage": "https://github.com/seisigma/laravel-access-profiles",
+    "homepage": "https://github.com/seisigmasrl/laravel-access-profiles",
     "license": "MIT",
     "authors": [
         {
@@ -20,15 +20,15 @@
     ],
     "require": {
         "php": "^8.3",
-        "illuminate/contracts": "^11.0||^12.0||^13.0",
-        "illuminate/database": "^11.0||^12.0||^13.0",
-        "illuminate/support": "^11.0||^12.0||^13.0"
+        "illuminate/contracts": "^12.0||^13.0",
+        "illuminate/database": "^12.0||^13.0",
+        "illuminate/support": "^12.0||^13.0"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.1",
-        "orchestra/testbench": "^11.0||^10.0||^9.0",
+        "orchestra/testbench": "^11.0||^10.0",
         "pestphp/pest": "^3.0||^4.0",
         "pestphp/pest-plugin-arch": "^3.0||^4.0",
         "pestphp/pest-plugin-laravel": "^3.0||^4.0",

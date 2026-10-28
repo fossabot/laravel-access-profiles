@@ -1,6 +1,7 @@
 # laravel-access-profiles — Design
 
-Status: **draft for approval** (2026-10-28). No resolver, models or business code exist yet.
+Status: **approved** (2026-10-28; decisions in §9). No resolver, models or business code exist yet.
+Package: `seisigmasrl/laravel-access-profiles`. Requires PHP 8.3+ and Laravel 12 or 13.
 The skeleton contains only the service provider, the config file and the migration stub for the four tables below.
 
 ---
@@ -133,8 +134,9 @@ public function approve(User $user, Invoice $invoice): bool
 }
 ```
 
-Optional: `'gate' => ['register' => true]` defines one Gate ability per catalogue key,
-so `$user->can('billing.invoice.approve', $site)` and the `can:` middleware also work. Off by default (open question Q3).
+Version 0.1 has **explicit checks only** (`canAccess()` / `Access::for()`); `$user->can()` stays plain Laravel (Q3 A).
+A later version may add an opt-in `'gate' => ['register' => true]` that defines one Gate ability per catalogue key,
+so `$user->can('billing.invoice.approve', $site)` and the `can:` middleware also work. Not in 0.1.
 
 ### 3.4 Blade and Inertia
 
@@ -200,7 +202,7 @@ On by default; each is a config switch. They run in `save()` and throw `GrantRej
 | `guards.no_escalation` / `no_self_assignment` / `protected_profiles` | `true` / `true` / `[]` | §4. |
 | `events.access_checked` | `false` | §3.6. |
 | `bindings` | `[]` | Swap contract implementations. |
-| `gate.register` (planned) | `false` | §3.3. |
+| `gate.register` (later, not in 0.1) | `false` | §3.3. |
 
 ### 5.2 Tables
 
@@ -301,8 +303,11 @@ Packagist search `https://packagist.org/search.json?q=<name>` (any vendor), and 
 | `laravel-grantbook` | 404 (free) | 0 results | 0 | Memorable, stresses the audit trail; does not say what it does. |
 
 **Pick: `laravel-access-profiles`** (namespace `Seisigma\AccessProfiles`). `seisigmasrl/laravel-access-profiles` is also free (see Q1).
+**Decided:** `seisigmasrl/laravel-access-profiles` (Q1 B). The PHP namespace stays `Seisigma\AccessProfiles`, the same as `seisigmasrl/dgii-rnc-validator`.
 
 ## 9. Open questions for Ricardo
+
+Decided 2026-10-28 (Ricardo): Q1 B, Q2 B, Q3 A, Q4 A
 
 **Q1 — Packagist vendor.**
 A) `seisigma/` as the brief says — new vendor, nothing published there yet.

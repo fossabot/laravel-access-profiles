@@ -1,6 +1,6 @@
 <?php
 
-// config for Seisigma/AccessProfiles — see docs/DESIGN.md §6 for what each key does.
+// config for Seisigma/AccessProfiles — see docs/DESIGN.md §5.1 for what each key does.
 return [
 
     /*
@@ -43,7 +43,7 @@ return [
     'token_intersection' => true,
 
     /*
-     * Write-time guards on grant/revoke. See docs/DESIGN.md §5.4.
+     * Write-time guards on grant/revoke. See docs/DESIGN.md §4.
      */
     'guards' => [
         'no_escalation' => true,
