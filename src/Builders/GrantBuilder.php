@@ -6,6 +6,8 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Seisigma\AccessProfiles\Events\AssignmentGranted;
+use Seisigma\AccessProfiles\Events\Snapshot;
 use Seisigma\AccessProfiles\Exceptions\GrantRejected;
 use Seisigma\AccessProfiles\Guards\HostRules;
 use Seisigma\AccessProfiles\Guards\TenantConsistency;
@@ -115,6 +117,7 @@ class GrantBuilder extends AssignmentBuilder
             ]);
             self::writeScopes($assignment, $scopes);
             DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+            event(new AssignmentGranted($this->grantor, $this->system, $this->reason, null, Snapshot::assignment($assignment->refresh())));
 
             return $assignment;
         });

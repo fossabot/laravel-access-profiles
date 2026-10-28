@@ -9,6 +9,7 @@ use Seisigma\AccessProfiles\Contracts\ProfileConditions;
 use Seisigma\AccessProfiles\Contracts\Resolver;
 use Seisigma\AccessProfiles\Contracts\ScopeOwnership;
 use Seisigma\AccessProfiles\Enums\Effect;
+use Seisigma\AccessProfiles\Events\AccessChecked;
 use Seisigma\AccessProfiles\Models\Assignment;
 use Seisigma\AccessProfiles\Models\AssignmentScope;
 use Seisigma\AccessProfiles\Models\ProfileRule;
@@ -31,7 +32,13 @@ class DatabaseResolver implements Resolver
     {
         $tenant = $this->ownership->tenantOf($target);
 
-        return $this->evaluate($this->grants($holder, $tenant), $holder, $permission, $target, $tenant);
+        $decision = $this->evaluate($this->grants($holder, $tenant), $holder, $permission, $target, $tenant);
+
+        if (config('access-profiles.events.access_checked', false)) {
+            event(new AccessChecked($holder, $target, $decision));
+        }
+
+        return $decision;
     }
 
     public function permissionsIn(Model $holder, Model $target): array
