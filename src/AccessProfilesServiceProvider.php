@@ -35,6 +35,7 @@ class AccessProfilesServiceProvider extends ServiceProvider
             config('access-profiles.bindings.'.Resolver::class, DatabaseResolver::class)
         ));
         $this->app->scoped(RequestMemo::class);
+        $this->app->singleton(AccessManager::class);
     }
 
     public function boot(): void
