@@ -4,6 +4,7 @@ namespace Seisigma\AccessProfiles\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Seisigma\AccessProfiles\Resolver\RequestMemo;
 
 class TenantVersion
 {
@@ -27,6 +28,8 @@ class TenantVersion
         $key = $this->key($tenant);
         // add is atomic and never replaces a counter another writer initialized.
         $store->add($key, 1);
+        // Every write bumps the version, so this request also stops using what it loaded.
+        app(RequestMemo::class)->forgetTenant($tenant);
 
         return (int) $store->increment($key);
     }
