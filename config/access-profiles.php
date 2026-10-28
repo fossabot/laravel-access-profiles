@@ -16,6 +16,9 @@ return [
     // Class implementing Contracts\TemplateDefinitions; null disables template sync.
     'templates' => null,
 
+    // Classes implementing Contracts\BackfillSource, selected by their name().
+    'backfill' => ['sources' => []],
+
     /*
      * Table names. Change them before you run the migration.
      */
