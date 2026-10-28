@@ -5,6 +5,8 @@ namespace Seisigma\AccessProfiles;
 use Illuminate\Support\ServiceProvider;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
 use Seisigma\AccessProfiles\Commands\CensusCommand;
+use Seisigma\AccessProfiles\Contracts\ScopeOwnership;
+use Seisigma\AccessProfiles\Support\DefaultScopeOwnership;
 
 /**
  * Plain service provider on purpose: the package keeps its runtime
@@ -17,6 +19,9 @@ class AccessProfilesServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/access-profiles.php', 'access-profiles');
         $this->app->singleton(Catalogue::class, fn () => new Catalogue(config('access-profiles.catalogues')));
+        $this->app->bind(ScopeOwnership::class, fn ($app) => $app->make(
+            config('access-profiles.bindings.'.ScopeOwnership::class, DefaultScopeOwnership::class)
+        ));
     }
 
     public function boot(): void

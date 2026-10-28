@@ -231,6 +231,8 @@ not by a unique index, so revoked history rows can stay.
 | `BackfillSource` | none | You migrate from another permission system. |
 | `Resolver` | package resolver | You need a different decision algorithm (rare). |
 
+Tenant models also implement `HasAccessTenant` and return `$this`; scope models return their tenant, other targets throw an exception naming their class, and `$target->is($target->accessTenant())` identifies a tenant-level target.
+
 ### 5.4 Out of scope
 
 - **No UI.** No admin panel, no Livewire/Inertia screens.
