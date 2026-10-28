@@ -1,9 +1,20 @@
 # Laravel Access Profiles
 
 > **Status: design approved, not built yet.** The API below is the planned API ([docs/DESIGN.md](docs/DESIGN.md)). Nothing is released yet.
-> Requires PHP 8.3+ and Laravel 12 or 13.
+> Requires PHP 8.3+ and Laravel 12.69+ or 13.30+. See [Supported versions](#supported-versions).
 
 **Give people different powers in different parts of the same tenant — with deny rules, expiry dates and a record of who granted what, and why.**
+
+## Supported versions
+
+CI runs every row on its lowest and its newest allowed release.
+
+| Package | PHP | Laravel | Testbench |
+|---|---|---|---|
+| 0.1.x | 8.3, 8.4, 8.5 | 12.69+ | 10.x |
+| 0.1.x | 8.3, 8.4, 8.5 | 13.30+ | 11.x |
+
+The minimums are the first Laravel releases with no open security advisory. Composer refuses older releases.
 
 ## Why this package
 
