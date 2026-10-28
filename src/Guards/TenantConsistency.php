@@ -69,9 +69,10 @@ class TenantConsistency
      * One live row per holder × profile × tenant: a row that is not revoked and
      * has not ended (current or starting later) blocks a new grant. Revoked and
      * ended rows stay as history. Call inside the write transaction: the rows
-     * are locked, so two parallel grants cannot both pass.
+     * are locked, so two parallel grants cannot both pass. A change passes its
+     * own row as $except, so the row is not its own duplicate.
      */
-    public function noDuplicate(Model $holder, Profile $profile, Model $tenant, CarbonInterface $now): void
+    public function noDuplicate(Model $holder, Profile $profile, Model $tenant, CarbonInterface $now, int|string|null $except = null): void
     {
         $live = Assignment::query()
             ->inTenant($tenant)
@@ -79,11 +80,18 @@ class TenantConsistency
             ->where('profile_id', $profile->getKey())
             ->whereNull('revoked_at')
             ->where(fn (Builder $query) => $query->whereNull('valid_until')->orWhere('valid_until', '>', $now))
+            ->when($except !== null, fn (Builder $query) => $query->whereKeyNot($except))
             ->lockForUpdate()
             ->pluck('id');
 
         if ($live->isNotEmpty()) {
             throw new GrantRejected(GrantRejected::DUPLICATE_ASSIGNMENT);
         }
+    }
+
+    /** The end-date half of the live rule in noDuplicate(): no end, or an end after now. */
+    public static function endsAfter(?CarbonInterface $until, CarbonInterface $now): bool
+    {
+        return $until === null || $until->greaterThan($now);
     }
 }
