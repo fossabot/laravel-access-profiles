@@ -53,6 +53,8 @@ return [
         'no_self_assignment' => true,
         // Profile keys whose last active holder in a tenant cannot be revoked.
         'protected_profiles' => [],
+        // Host rules (Contracts\AssignmentRule classes), run in order on grant and change.
+        'rules' => [],
     ],
 
     /*
