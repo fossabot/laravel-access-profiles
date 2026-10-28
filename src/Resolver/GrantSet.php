@@ -44,11 +44,22 @@ final class GrantSet
      */
     public function covering(Model $target, bool $tenantLevel, CarbonInterface $now): array
     {
-        $at = $now->getTimestamp();
         $scope = self::scopeKey($target);
 
-        return array_values(array_filter($this->entries, fn (array $entry): bool => self::isActive($entry, $at)
-            && ($entry['covers_tenant'] || (! $tenantLevel && in_array($scope, $entry['scopes'], true)))));
+        return array_values(array_filter($this->active($now), fn (array $entry): bool => $entry['covers_tenant']
+            || (! $tenantLevel && in_array($scope, $entry['scopes'], true))));
+    }
+
+    /**
+     * Entries active at $now, whatever they cover.
+     *
+     * @return list<Entry>
+     */
+    public function active(CarbonInterface $now): array
+    {
+        $at = $now->getTimestamp();
+
+        return array_values(array_filter($this->entries, fn (array $entry): bool => self::isActive($entry, $at)));
     }
 
     /**

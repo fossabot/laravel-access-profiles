@@ -5,6 +5,7 @@ namespace Seisigma\AccessProfiles\Access;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Seisigma\AccessProfiles\Contracts\Resolver;
+use Seisigma\AccessProfiles\Queries\ScopeSet;
 use Seisigma\AccessProfiles\Resolver\Decision;
 
 /**
@@ -41,5 +42,11 @@ class HolderAccess
     public function permissionsIn(Model $target): array
     {
         return $this->resolver->permissionsIn($this->holder, $target);
+    }
+
+    /** Where the holder has the permission in a tenant (a scope target means its tenant). */
+    public function scopesWhere(string $permission, Model $tenant): ScopeSet
+    {
+        return $this->resolver->scopesWhere($this->holder, $permission, $tenant);
     }
 }
