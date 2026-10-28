@@ -3,6 +3,8 @@
 namespace Seisigma\AccessProfiles\Builders;
 
 use Illuminate\Support\Facades\DB;
+use Seisigma\AccessProfiles\Events\AssignmentRevoked;
+use Seisigma\AccessProfiles\Events\Snapshot;
 use Seisigma\AccessProfiles\Guards\ProtectedProfiles;
 use Seisigma\AccessProfiles\Models\Assignment;
 use Seisigma\AccessProfiles\Models\Profile;
@@ -20,6 +22,7 @@ class RevokeBuilder extends AssignmentBuilder
     {
         return DB::transaction(function (): Assignment {
             $row = self::lockLive($this->assignment);
+            $before = Snapshot::assignment($row);
             $tenant = self::tenantOf($row);
             $profile = Profile::withTrashed()->whereKey($row->getAttribute('profile_id'))->firstOrFail();
             // Revoking only takes reach away, so it needs no escalation check.
@@ -35,6 +38,7 @@ class RevokeBuilder extends AssignmentBuilder
                 'revoke_reason' => $this->reason,
             ])->save();
             DB::afterCommit(fn () => app(TenantVersion::class)->bump($tenant));
+            event(new AssignmentRevoked($this->grantor, $this->system, $this->reason, $before, Snapshot::assignment($row->refresh())));
 
             return $row;
         });

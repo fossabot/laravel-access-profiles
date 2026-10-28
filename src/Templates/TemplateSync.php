@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
 use Seisigma\AccessProfiles\Contracts\TemplateDefinitions;
+use Seisigma\AccessProfiles\Events\Snapshot;
+use Seisigma\AccessProfiles\Events\TemplatesSynced;
 use Seisigma\AccessProfiles\Models\Assignment;
 use Seisigma\AccessProfiles\Models\Profile;
 use Seisigma\AccessProfiles\Support\TenantVersion;
@@ -45,10 +47,13 @@ class TemplateSync
                 ->whereNull('tenant_type')->whereNull('tenant_id')->get()->keyBy('key');
             $changes = [];
             $changedIds = [];
+            $before = [];
+            $after = [];
 
             foreach ($definitions as $key => $definition) {
                 $profile = $profiles->get($key);
                 $creating = $profile === null;
+                $previous = $profile === null ? null : Snapshot::profile($profile);
                 $profile ??= new Profile(['key' => $key, 'is_system' => true, 'version' => 1]);
                 $profile->fill([
                     'name' => $definition->name,
@@ -79,6 +84,10 @@ class TemplateSync
                     $profile->rules()->create(['permission' => $permission, 'effect' => $effect]);
                 }
                 $changedIds[] = $profile->getKey();
+                if ($previous !== null) {
+                    $before[] = $previous;
+                }
+                $after[] = Snapshot::profile($profile->refresh());
             }
 
             foreach ($profiles as $key => $profile) {
@@ -89,10 +98,12 @@ class TemplateSync
                 $changes[] = 'Delete: '.$key;
 
                 if (! $dryRun) {
+                    $before[] = Snapshot::profile($profile);
                     $profile->setAttribute('version', $profile->getAttribute('version') + 1);
                     $profile->save();
                     $profile->delete();
                     $changedIds[] = $profile->getKey();
+                    $after[] = Snapshot::profile($profile);
                 }
             }
 
@@ -113,6 +124,7 @@ class TemplateSync
                         }
                     }
                 });
+                event(new TemplatesSynced(null, true, 'access-profiles:sync-templates', $before, $after));
             }
 
             return $changes === [] ? ['No changes'] : $changes;
