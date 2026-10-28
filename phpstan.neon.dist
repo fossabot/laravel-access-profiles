@@ -7,4 +7,5 @@ parameters:
         - src
         - config
         - database
+        - tests/Fixtures/User.php
     tmpDir: build/phpstan

@@ -2,6 +2,9 @@
 
 namespace Seisigma\AccessProfiles;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
 use Seisigma\AccessProfiles\Commands\CensusCommand;
@@ -9,6 +12,7 @@ use Seisigma\AccessProfiles\Commands\SyncTemplatesCommand;
 use Seisigma\AccessProfiles\Contracts\ProfileConditions;
 use Seisigma\AccessProfiles\Contracts\Resolver;
 use Seisigma\AccessProfiles\Contracts\ScopeOwnership;
+use Seisigma\AccessProfiles\Facades\Access;
 use Seisigma\AccessProfiles\Resolver\DatabaseResolver;
 use Seisigma\AccessProfiles\Resolver\RequestMemo;
 use Seisigma\AccessProfiles\Support\DefaultScopeOwnership;
@@ -41,6 +45,12 @@ class AccessProfilesServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->make(Catalogue::class);
+
+        Blade::if('canAccess', function (string $key, Model $target): bool {
+            $user = Auth::user();
+
+            return $user instanceof Model && Access::for($user)->can($key, $target);
+        });
 
         if (! $this->app->runningInConsole()) {
             return;
