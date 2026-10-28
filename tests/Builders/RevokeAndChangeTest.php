@@ -402,6 +402,49 @@ it('allows an end date on a protected holder when another holder stays', functio
     expect(Rejection::of(fn () => Access::change($assignment)->validUntil(now())->by($this->admin)->save()))->toBeNull();
 });
 
+it('rejects a change that brings an ended row back while a live duplicate exists', function (?string $until) {
+    $ended = Grants::assign($this->user, $this->viewer, $this->team, attributes: ['valid_from' => now()->subMonth(), 'valid_until' => now()->subDay()]);
+    Grants::assign($this->user, $this->viewer, $this->team);
+    $versions = app(TenantVersion::class);
+    $before = $versions->current($this->team);
+
+    expect(Rejection::of(fn () => Access::change($ended)->validUntil($until === null ? null : Carbon::parse($until))->titled('Back')->by($this->admin)->save()))
+        ->toBe(GrantRejected::DUPLICATE_ASSIGNMENT)
+        ->and($ended->fresh()->valid_until->toDateTimeString())->toBe('2026-10-27 12:00:00')
+        ->and($ended->fresh()->title)->toBeNull()
+        ->and($versions->current($this->team))->toBe($before);
+})->with(['future end' => ['2026-12-31 00:00:00'], 'open end' => [null]]);
+
+it('brings an ended row back when no other live row exists', function () {
+    $ended = Grants::assign($this->user, $this->viewer, $this->team, attributes: ['valid_from' => now()->subMonth(), 'valid_until' => now()->subDay()]);
+    Grants::assign($this->user, $this->viewer, $this->team, attributes: ['revoked_at' => now()->subHour()]);
+    Grants::assign($this->user, $this->viewer, $this->team, attributes: ['valid_until' => now()]);
+    Grants::assign($this->user, $this->full, $this->team);
+    Grants::assign(User::create(), $this->viewer, $this->team);
+
+    expect(Rejection::of(fn () => Access::change($ended)->validUntil(null)->by($this->admin)->save()))->toBeNull()
+        ->and($ended->fresh()->valid_until)->toBeNull();
+});
+
+it('changes a single live row without counting it as its own duplicate', function () {
+    $assignment = Grants::assign($this->user, $this->viewer, $this->team, [$this->site]);
+
+    expect(Rejection::of(fn () => Access::change($assignment)->validUntil(now()->addWeek())->onlyScopes([$this->otherSite])->titled('T')->by($this->admin)->save()))
+        ->toBeNull()
+        ->and(Rejection::of(fn () => Access::change($assignment)->validUntil(null)->by($this->admin)->save()))->toBeNull()
+        ->and($assignment->fresh()->title)->toBe('T');
+});
+
+it('changes an ended row that stays ended even while a live duplicate exists', function () {
+    $ended = Grants::assign($this->user, $this->viewer, $this->team, attributes: ['valid_from' => now()->subMonth(), 'valid_until' => now()->subDay()]);
+    Grants::assign($this->user, $this->viewer, $this->team);
+
+    expect(Rejection::of(fn () => Access::change($ended)->titled('History')->by($this->admin)->save()))->toBeNull()
+        ->and(Rejection::of(fn () => Access::change($ended)->validUntil(now())->by($this->admin)->save()))->toBeNull()
+        ->and($ended->fresh()->title)->toBe('History')
+        ->and($ended->fresh()->valid_until->toDateTimeString())->toBe('2026-10-28 12:00:00');
+});
+
 it('allows other changes and an open end on the last protected holder', function () {
     $assignment = Grants::assign($this->user, $this->owner, $this->team, attributes: ['valid_until' => now()->addDay()]);
 
