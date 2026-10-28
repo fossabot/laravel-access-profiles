@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
+use Seisigma\AccessProfiles\Commands\BackfillCommand;
+use Seisigma\AccessProfiles\Commands\CacheClearCommand;
 use Seisigma\AccessProfiles\Commands\CensusCommand;
+use Seisigma\AccessProfiles\Commands\ShowCommand;
 use Seisigma\AccessProfiles\Commands\SyncTemplatesCommand;
 use Seisigma\AccessProfiles\Contracts\ProfileConditions;
 use Seisigma\AccessProfiles\Contracts\Resolver;
@@ -58,6 +61,7 @@ class AccessProfilesServiceProvider extends ServiceProvider
 
         $this->commands([CensusCommand::class]);
         $this->commands([SyncTemplatesCommand::class]);
+        $this->commands([CacheClearCommand::class, BackfillCommand::class, ShowCommand::class]);
 
         $this->publishes([
             __DIR__.'/../config/access-profiles.php' => config_path('access-profiles.php'),
