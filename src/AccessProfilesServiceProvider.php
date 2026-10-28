@@ -3,6 +3,8 @@
 namespace Seisigma\AccessProfiles;
 
 use Illuminate\Support\ServiceProvider;
+use Seisigma\AccessProfiles\Catalogue\Catalogue;
+use Seisigma\AccessProfiles\Commands\CensusCommand;
 
 /**
  * Plain service provider on purpose: the package keeps its runtime
@@ -14,13 +16,18 @@ class AccessProfilesServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/access-profiles.php', 'access-profiles');
+        $this->app->singleton(Catalogue::class, fn () => new Catalogue(config('access-profiles.catalogues')));
     }
 
     public function boot(): void
     {
+        $this->app->make(Catalogue::class);
+
         if (! $this->app->runningInConsole()) {
             return;
         }
+
+        $this->commands([CensusCommand::class]);
 
         $this->publishes([
             __DIR__.'/../config/access-profiles.php' => config_path('access-profiles.php'),
