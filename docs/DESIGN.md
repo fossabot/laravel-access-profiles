@@ -1,8 +1,8 @@
 # laravel-access-profiles — Design
 
-Status: **approved** (2026-10-28; decisions in §9). No resolver, models or business code exist yet.
+Status: **built in 0.1.0** (unreleased; approved 2026-10-28; decisions in §9).
 Package: `seisigmasrl/laravel-access-profiles`. Requires PHP 8.3+ and Laravel 12 or 13.
-The skeleton contains only the service provider, the config file and the migration stub for the four tables below.
+The package includes the resolver, models, builders, queries, events and commands described below.
 
 ---
 
@@ -71,9 +71,9 @@ an assignment of a full profile. The package never answers `true` because of who
   `Access::for($this->actor)->authorize('billing.report.export', $this->site);`
   A grant revoked between dispatch and execution is therefore honoured.
 
-## 3. Public API sketch
+## 3. Public API
 
-Names are proposals. Everything below is a sketch, not code that exists.
+The following names are implemented in 0.1.0.
 
 ### 3.1 Checks
 
@@ -93,8 +93,10 @@ Access::for($user)->explain('billing.invoice.approve', $site);   // Decision: al
 Access::for($user)->permissionsIn($site);                    // list<string> granted keys (for UI)
 Access::for($user)->scopesWhere('billing.invoice.view', $organisation); // ScopeSet
 //   ScopeSet->coversTenant(): bool   (true = every scope)
-//   ScopeSet->ids(Site::class): list<int>
-//   ScopeSet->constrain($query, 'site_id'): Builder   (adds whereIn, or nothing when coversTenant)
+//   ScopeSet->ids(Site::class): list<int|string>
+//   ScopeSet->exceptIds(Site::class): list<int|string> (scope denies inside tenant-wide access)
+//   ScopeSet->constrain($query, 'site_id', Site::class): Builder
+//     (tenant-filtered query; adds whereIn / whereNotIn, or nothing when coversTenant)
 
 // "Who holds permission P in scope S" — one query, deny applied
 Access::holders('billing.invoice.approve', $site);           // Eloquent\Collection of holders
@@ -116,8 +118,13 @@ $assignment = Access::grant('board_reviewer')                // profile key (ten
 
 Access::revoke($assignment)->by($admin)->because('Term ended')->save();
 
-Access::profile('auditor')->in($organisation)->copyFromTemplate();       // tenant copy
-Access::profile('auditor')->in($organisation)->allow('billing.*')->deny('billing.bank.reveal')->save();
+Access::profile('auditor')->in($organisation)->by($admin)->because('Local copy')->copyFromTemplate(); // saves the tenant copy
+Access::profile('auditor')->in($organisation)->allow('billing.*')->deny('billing.bank.reveal')
+    ->by($admin)->because('Local rules')->save();
+
+Access::change($assignment)->validUntil(now()->addYear())->onlyScopes([$site3])
+    ->titled('Review cover')->by($admin)->because('Extended term')->save();
+Access::grant('auditor')->to($user)->in($organisation)->bySystem('seed: initial audit access')->save();
 ```
 
 `billing.*` is **expanded at write time** against the catalogue, so the stored rules are always exact keys.
@@ -152,7 +159,8 @@ so it works with Sanctum and needs no `laravel/sanctum` dependency. Profile gran
 
 ### 3.6 Events (audit, no activity-log dependency)
 
-All events carry the actor (`by`), the reason and the before/after state.
+Write events carry the actor (`by`, nullable for system writes), `system`, the reason and the before/after state.
+`AccessChecked` instead carries `actor`, `target`, `decision`, `system` and `reason`, without snapshots.
 
 | Event | When |
 |---|---|
@@ -173,7 +181,7 @@ Passive expiry fires nothing (nothing happens at that moment); `Access::history(
 | `access-profiles:sync-templates` | Upsert system templates from code definitions; bump their `version`; report changes. `--dry-run`. |
 | `access-profiles:census` | Fail (exit 1) if a stored rule key is not in a catalogue; list catalogue keys no profile uses. For CI. |
 | `access-profiles:cache-clear {--tenant=}` | Bump the version of one tenant or all tenants. |
-| `access-profiles:backfill {source} {--dry-run}` | Run a host `BackfillSource` (contract) that yields assignment drafts from the old system; report per tenant; write only without `--dry-run`. |
+| `access-profiles:backfill {source} {--dry-run} {--tenant=}` | Run a host `BackfillSource` (contract) that yields assignment drafts from the old system; report per tenant; write only without `--dry-run`. |
 | `access-profiles:show {holder} {tenant}` | Print active assignments, scopes, validity and effective keys. |
 
 ## 4. Write-time guards
@@ -195,7 +203,9 @@ On by default; each is a config switch. They run in `save()` and throw `GrantRej
 
 | Key | Default | Purpose |
 |---|---|---|
-| `catalogues` | `[]` | Classes implementing `PermissionCatalogue`. |
+| `catalogues` | `[]` | Classes implementing `PermissionCatalogue::keys()` (static). |
+| `templates` | `null` | Class implementing static `TemplateDefinitions::templates()`. |
+| `backfill.sources` | `[]` | Classes implementing `BackfillSource`. |
 | `tables.*` | `access_profiles`, `access_profile_permissions`, `access_assignments`, `access_assignment_scopes` | Table names. |
 | `cache.enabled` / `store` / `ttl` / `prefix` | `true` / default store / 24 h / `access-profiles` | §2.2. |
 | `token_intersection` | `true` | §3.5. |
@@ -213,10 +223,10 @@ On by default; each is a config switch. They run in `save()` and throw `GrantRej
 | `access_assignments` | id, `tenant` morph, `holder` morph, profile_id, profile_version, covers_tenant, title, valid_from, valid_until, `granted_by` morph, reason, revoked_at, `revoked_by` morph, revoke_reason, timestamps. |
 | `access_assignment_scopes` | assignment_id, `scope` morph. Unique (assignment, scope). |
 
-Changes from the source design (Condomera PRJ-030 §4.2): `company_id` → `tenant` morph; `user_id` → `holder` morph;
-`scope enum(company, condominiums)` → `covers_tenant` boolean; `condominium_id` → `scope` morph;
+Changes from the source design: a fixed team ID → `tenant` morph; a fixed user ID → `holder` morph;
+a team-or-sites scope enum → `covers_tenant` boolean; a fixed site ID → `scope` morph;
 `position_key` dropped (domain field — hosts can keep their own mapping); `revoke_reason` added;
-`companies.access_version` replaced by the cache counter (§2.2). The "one row per profile per user" rule is enforced in the grant builder,
+the team's access-version column replaced by the cache counter (§2.2). The "one row per profile per user" rule is enforced in the grant builder,
 not by a unique index, so revoked history rows can stay.
 
 ### 5.3 Contracts (extension points)
@@ -244,45 +254,45 @@ Tenant models also implement `HasAccessTenant` and return `$this`; scope models 
 - **No resident/customer portal roles.** The package is for staff-style access inside a tenant.
 - **No multiple auth guards logic.** A holder is a model; use one holder type per guard if you need that.
 
-## 6. How Condomera would use it (example host)
+## 6. How a team app uses it (example host)
 
-Condomera is the first host. The mapping, from PRJ-030 §4.5–§4.6:
+A host maps its team and site models to the package concepts:
 
-| Package concept | Condomera |
+| Package concept | Example host |
 |---|---|
-| Tenant | `Company` (the administration company) |
-| Scope | `Condominium` (implements `HasAccessTenant`, returns its company) |
-| Holder | `User` (company members only — an `AssignmentRule` checks Jetstream membership) |
-| Catalogue | `App\Access\Permission` enum: `finance.expense.approve`, `finance.payable.pay`, `finance.bank.reveal`, `hr.salary.view`, `porteria.package.register`, `access.members.manage`, … |
-| Templates | `admin_general`, `admin_condominio`, `contador`, `auxiliar`, `cobros`, `tesoreria`, `rrhh`, `operaciones`, `porteria`, `junta_lectura`, `junta_aprobadora`, `revision`, `tecnico_legado` |
-| `covers_tenant = true` | `admin_general`, `rrhh` (company level) |
-| `covers_tenant = false` + scopes | `admin_condominio` of condos 3 and 7; `operaciones`; `porteria` |
-| Validity window | `contador` (external, expiry suggested), `revision` (expiry required) |
-| Title | Junta appointments: "Presidente de junta", "Tesorero de junta" |
-| Condition | `junta_aprobadora.requires_condition = board_approvals` → `ProfileConditions` reads the System-configuration flag (Q2, OFF by default) |
-| `AssignmentRule` | `junta_aprobadora` only for a user with `board_member` in that condominium |
-| `protected_profiles` | `['admin_general']` — last one cannot be removed (G1) |
+| Tenant | `Team` (the organisation) |
+| Scope | `Site` (implements `HasAccessTenant`, returns its team) |
+| Holder | `User` (team members only — an `AssignmentRule` checks membership) |
+| Catalogue | `App\Access\Permission` enum: `billing.invoice.approve`, `billing.payment.pay`, `billing.bank.reveal`, `people.salary.view`, `site.delivery.register`, `access.members.manage`, … |
+| Templates | `team_admin`, `site_admin`, `accountant`, `assistant`, `collections`, `treasury`, `people_admin`, `operations`, `reception`, `board_reader`, `board_approver`, `reviewer`, `legacy_technician` |
+| `covers_tenant = true` | `team_admin`, `people_admin` (team level) |
+| `covers_tenant = false` + scopes | `site_admin` of sites 3 and 7; `operations`; `reception` |
+| Validity window | `accountant` (external, expiry suggested), `reviewer` (expiry required) |
+| Title | Board appointments: "Board chair", "Board treasurer" |
+| Condition | `board_approver.requires_condition = board_approvals` → `ProfileConditions` reads the host configuration flag (OFF by default) |
+| `AssignmentRule` | `board_approver` only for a user with `board_member` in that site |
+| `protected_profiles` | `['team_admin']` — last one cannot be removed |
 | Guards | `no_escalation` + `no_self_assignment` = PRJ-030 "Grant safety (G1)" |
-| Owner | No wildcard. Backfill gives the owner `admin_general`. |
-| Events → audit | One listener writes every event to `spatie/laravel-activitylog` (already in Condomera). |
-| Backfill | `BackfillSource` maps Jetstream `company_user.role`: owner/admin → `admin_general`; manager → `admin_condominio` with today's reach; technician → `tecnico_legado`; security → `porteria`. Ricardo runs it in production with `--dry-run` first. |
+| Owner | No wildcard. Backfill gives the owner `team_admin`. |
+| Events → audit | One listener writes every event to the host audit log. |
+| Backfill | `BackfillSource` maps the team membership role: owner/admin → `team_admin`; manager → `site_admin` with today's reach; technician → `legacy_technician`; reception → `reception`. The host operator runs it with `--dry-run` first. |
 | Shadow mode (S3) | `events.access_checked = true`; a listener compares with the old check and logs mismatches. |
 
-**DEC-065/067 eligible approvers** (PRJ-030 §4.6), with no package change:
+**Eligible approvers**, with no package change:
 
 ```php
-$eligible = Access::holders('finance.expense.approve', $expense->condominium)
-    ->reject(fn (User $u) => $u->is($expense->creator));   // maker never approves own item
+$eligible = Access::holders('billing.invoice.approve', $invoice->site)
+    ->reject(fn (User $u) => $u->is($invoice->creator));   // maker never approves own item
 
 match (true) {
     $eligible->isEmpty() => /* switch disabled; sole operator path (Q4): log record/approve/pay */,
     $eligible->count() === 1 => /* the other one approves */,
-    default => /* company default approver, or any other when the default is the maker */,
+    default => /* team default approver, or any other when the default is the maker */,
 };
 ```
 
 Because `holders()` applies deny, validity, revocation and the `board_approvals` condition, a board approver counts only while the flag is ON
-and the appointment is valid — exactly the PRJ-030 rule.
+and the appointment is valid. The host keeps its workflow rules.
 
 ## 7. Delivery plan (after approval)
 
