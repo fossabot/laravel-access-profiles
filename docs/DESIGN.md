@@ -1,7 +1,7 @@
 # laravel-access-profiles — Design
 
-Status: **built in 0.1.0** (unreleased; approved 2026-10-28; decisions in §9).
-Package: `seisigmasrl/laravel-access-profiles`. Requires PHP 8.3+ and Laravel 12 or 13.
+Status: **released 0.1.0** (2026-10-28; decisions in §9).
+Package: `seisigmasrl/laravel-access-profiles`. Requires PHP 8.3+ and Laravel 12.69+ or 13.30+.
 The package includes the resolver, models, builders, queries, events and commands described below.
 
 ---
@@ -294,16 +294,16 @@ match (true) {
 Because `holders()` applies deny, validity, revocation and the `board_approvals` condition, a board approver counts only while the flag is ON
 and the appointment is valid. The host keeps its workflow rules.
 
-## 7. Delivery plan (after approval)
+## 7. Delivery blocks (completed in 0.1.0)
 
 | Block | Content |
 |---|---|
 | D2 | Models, catalogue contract, template sync, resolver + cache + scoped memo; tests for every rule in §2.1. |
 | D3 | Grant/revoke builders, guards, events. |
 | D4 | `holders()` / `scopesWhere()` queries (SQL, deny applied); Blade directive; token intersection. |
-| D5 | Commands; README examples run as tests; 0.1.0 tag (local). |
+| D5 | Commands; README examples run as tests; 0.1.0 tagged and published. |
 
-## 8. Package name
+## 8. Package name (pre-release research)
 
 Checked on 2026-10-28: Packagist `https://repo.packagist.org/p2/seisigma/<name>.json` (404 = free),
 Packagist search `https://packagist.org/search.json?q=<name>` (any vendor), and GitHub repository search by name (`gh api search/repositories`).
@@ -314,11 +314,12 @@ Packagist search `https://packagist.org/search.json?q=<name>` (any vendor), and 
 | `laravel-scoped-access` | 404 (free) | 0 results | 0 | Stresses the scope feature; "access" alone is vague. |
 | `laravel-grantbook` | 404 (free) | 0 results | 0 | Memorable, stresses the audit trail; does not say what it does. |
 
-**Pick: `laravel-access-profiles`** (namespace `Seisigma\AccessProfiles`). `seisigmasrl/laravel-access-profiles` is also free (see Q1).
+**Pick: `laravel-access-profiles`** (namespace `Seisigma\AccessProfiles`). `seisigmasrl/laravel-access-profiles` was also free when checked before release (see Q1).
 **Decided:** `seisigmasrl/laravel-access-profiles` (Q1 B). The PHP namespace stays `Seisigma\AccessProfiles`, the same as `seisigmasrl/dgii-rnc-validator`.
 
-## 9. Open questions for Ricardo
+## 9. Historical Q&A for Ricardo
 
+Historical pre-release discussion; availability and skeleton statements below describe that point in time.
 Decided 2026-10-28 (Ricardo): Q1 B, Q2 B, Q3 A, Q4 A
 
 **Q1 — Packagist vendor.**
