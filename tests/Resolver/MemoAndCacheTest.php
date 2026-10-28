@@ -3,6 +3,7 @@
 use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -85,22 +86,44 @@ it('flushes the memo between two octane-style requests', function () {
     expect(HolderAccess::for($this->user)->can('billing.invoice.view', $this->site))->toBeTrue();
 });
 
-it('keys the memo by tenant for a holder in two tenants', function () {
+it('keeps one holders decisions apart across tenants in the same request', function (bool $allowedFirst) {
     config()->set('access-profiles.cache.enabled', false);
     $other = Team::create();
     Grants::assign($this->user, $this->viewer, $this->team);
+    $access = HolderAccess::for($this->user);
+    $tenants = $allowedFirst ? [$this->team, $other] : [$other, $this->team];
+    $expected = $allowedFirst ? [true, false] : [false, true];
 
-    expect(HolderAccess::for($this->user)->can('billing.invoice.view', $this->team))->toBeTrue()
-        ->and(HolderAccess::for($this->user)->can('billing.invoice.view', $other))->toBeFalse();
-});
+    foreach ($tenants as $index => $tenant) {
+        expect($access->can('billing.invoice.view', $tenant))->toBe($expected[$index]);
+    }
 
-it('keys the memo by holder', function () {
+    expect($access->can('billing.invoice.view', $this->team))->toBeTrue()
+        ->and($access->can('billing.invoice.view', $other))->toBeFalse();
+})->with([
+    'allowed tenant first' => [true],
+    'unassigned tenant first' => [false],
+]);
+
+it('keeps same class holders decisions apart in the same tenant and request', function (bool $allowedFirst) {
     config()->set('access-profiles.cache.enabled', false);
+    $other = User::create();
     Grants::assign($this->user, $this->viewer, $this->team);
+    $allowed = HolderAccess::for($this->user);
+    $unassigned = HolderAccess::for($other);
+    $holders = $allowedFirst ? [$allowed, $unassigned] : [$unassigned, $allowed];
+    $expected = $allowedFirst ? [true, false] : [false, true];
 
-    expect(HolderAccess::for($this->user)->can('billing.invoice.view', $this->team))->toBeTrue()
-        ->and(HolderAccess::for(User::create())->can('billing.invoice.view', $this->team))->toBeFalse();
-});
+    foreach ($holders as $index => $access) {
+        expect($access->can('billing.invoice.view', $this->team))->toBe($expected[$index]);
+    }
+
+    expect($allowed->can('billing.invoice.view', $this->team))->toBeTrue()
+        ->and($unassigned->can('billing.invoice.view', $this->team))->toBeFalse();
+})->with([
+    'allowed holder first' => [true],
+    'unassigned holder first' => [false],
+]);
 
 it('keys the memo by holder type as well as id', function () {
     config()->set('access-profiles.cache.enabled', false);
@@ -109,6 +132,34 @@ it('keys the memo by holder type as well as id', function () {
     expect(HolderAccess::for($this->user)->can('billing.invoice.view', $this->team))->toBeTrue()
         ->and(HolderAccess::for(TokenUser::find($this->user->id))->can('billing.invoice.view', $this->team))->toBeFalse();
 });
+
+it('keeps morph alias and holder id boundaries distinct in the same request', function (bool $allowedFirst) {
+    config()->set('access-profiles.cache.enabled', false);
+    $morphMap = Relation::morphMap();
+    Relation::morphMap(['person1' => User::class, 'person' => TokenUser::class], false);
+
+    try {
+        $user = User::create(['id' => 2]);
+        $other = TokenUser::create(['id' => 12]);
+        Grants::assign($user, $this->viewer, $this->team);
+        $allowed = HolderAccess::for($user);
+        $unassigned = HolderAccess::for($other);
+        $holders = $allowedFirst ? [$allowed, $unassigned] : [$unassigned, $allowed];
+        $expected = $allowedFirst ? [true, false] : [false, true];
+
+        foreach ($holders as $index => $access) {
+            expect($access->can('billing.invoice.view', $this->team))->toBe($expected[$index]);
+        }
+
+        expect($allowed->can('billing.invoice.view', $this->team))->toBeTrue()
+            ->and($unassigned->can('billing.invoice.view', $this->team))->toBeFalse();
+    } finally {
+        Relation::morphMap($morphMap, false);
+    }
+})->with([
+    'allowed alias first' => [true],
+    'unassigned alias first' => [false],
+]);
 
 it('meets the query and cache budget cold, warm and on a memo hit', function () {
     Grants::assign($this->user, $this->viewer, $this->team, [$this->sites[0]]);
