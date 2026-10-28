@@ -13,6 +13,9 @@ return [
         // App\Access\Permission::class,
     ],
 
+    // Class implementing Contracts\TemplateDefinitions; null disables template sync.
+    'templates' => null,
+
     /*
      * Table names. Change them before you run the migration.
      */

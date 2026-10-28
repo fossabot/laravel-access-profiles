@@ -5,6 +5,7 @@ namespace Seisigma\AccessProfiles;
 use Illuminate\Support\ServiceProvider;
 use Seisigma\AccessProfiles\Catalogue\Catalogue;
 use Seisigma\AccessProfiles\Commands\CensusCommand;
+use Seisigma\AccessProfiles\Commands\SyncTemplatesCommand;
 use Seisigma\AccessProfiles\Contracts\ScopeOwnership;
 use Seisigma\AccessProfiles\Support\DefaultScopeOwnership;
 
@@ -33,6 +34,7 @@ class AccessProfilesServiceProvider extends ServiceProvider
         }
 
         $this->commands([CensusCommand::class]);
+        $this->commands([SyncTemplatesCommand::class]);
 
         $this->publishes([
             __DIR__.'/../config/access-profiles.php' => config_path('access-profiles.php'),
