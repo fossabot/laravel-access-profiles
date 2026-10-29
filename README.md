@@ -1,6 +1,12 @@
 # Laravel Access Profiles
 
-**Status: released 0.1.0 (2026-10-28).** Requires PHP 8.3+ and Laravel 12.69+ or 13.30+. See [Supported versions](#supported-versions).
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/seisigmasrl/laravel-access-profiles.svg?style=flat-square)](https://packagist.org/packages/seisigmasrl/laravel-access-profiles)
+[![Tests](https://img.shields.io/github/actions/workflow/status/seisigmasrl/laravel-access-profiles/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/seisigmasrl/laravel-access-profiles/actions/workflows/run-tests.yml)
+[![PHPStan](https://img.shields.io/github/actions/workflow/status/seisigmasrl/laravel-access-profiles/phpstan.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/seisigmasrl/laravel-access-profiles/actions/workflows/phpstan.yml)
+[![Total Downloads](https://img.shields.io/packagist/dt/seisigmasrl/laravel-access-profiles.svg?style=flat-square)](https://packagist.org/packages/seisigmasrl/laravel-access-profiles)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fseisigmasrl%2Flaravel-access-profiles.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fseisigmasrl%2Flaravel-access-profiles?ref=badge_shield)
+
+Requires PHP 8.3+ and Laravel 12.69+ or 13.30+. See [Supported versions](#supported-versions).
 
 Give people different permissions in different parts of a tenant. Profiles combine allow and deny rules. Assignments cover a whole tenant or selected scopes, with validity dates and a record of who granted access and why. Any matching deny wins. Access is denied by default.
 
@@ -272,3 +278,5 @@ Run `composer test`, `composer analyse` and `composer format`. Each fenced examp
 Ricardo A. Vargas R. (Seisigma SRL). Package layout follows [spatie/package-skeleton-laravel](https://github.com/spatie/package-skeleton-laravel).
 
 MIT. See [LICENSE.md](LICENSE.md).
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fseisigmasrl%2Flaravel-access-profiles.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fseisigmasrl%2Flaravel-access-profiles?ref=badge_large)
