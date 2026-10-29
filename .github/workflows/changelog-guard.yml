@@ -1,0 +1,23 @@
+name: changelog-guard
+
+# A release tag must have its CHANGELOG.md entry. The website reads the version from that entry.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CHANGELOG.md has a heading for this tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if grep -qE "^## ${version//./\\.} - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
+            echo "Found '## ${version}' in CHANGELOG.md"
+          else
+            echo "::error::CHANGELOG.md has no '## ${version} - YYYY-MM-DD' heading. Add the entry in the release PR."
+            exit 1
+          fi

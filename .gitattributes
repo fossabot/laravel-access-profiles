@@ -17,6 +17,7 @@
 /testbench.yaml     export-ignore
 /testbench.yaml.dist    export-ignore
 /UPGRADING.md       export-ignore
+/RELEASING.md       export-ignore
 /phpstan.neon.dist  export-ignore
 /phpstan-baseline.neon  export-ignore
 /pint.json          export-ignore
