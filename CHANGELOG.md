@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-10-29
+
+### Changed
+
+- Permission keys may have 2 to 4 lower snake segments. Wildcards match keys at any depth below their prefix.
+
 ## 0.1.0 - 2026-10-28
 
 ### Added

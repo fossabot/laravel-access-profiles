@@ -58,7 +58,7 @@ it('rejects malformed keys at boot', function (string $key) {
     };
     config()->set('access-profiles.catalogues', [$catalogue::class]);
     (new AccessProfilesServiceProvider(app()))->boot();
-})->with(['billing', 'billing.invoice', 'Billing.invoice.view', 'billing..view', 'billing.invoice.view.extra', 'billing.invoice.*', 'billing.invoice.view-', 'billing.invoice.view'."\n"])
+})->with(['billing', 'Billing.invoice.view', 'billing..view', 'billing.invoice.view.extra.more', 'billing.invoice.*', 'billing.invoice.view-', 'billing.invoice.view'."\n"])
     ->throws(InvalidArgumentException::class);
 
 it('accepts lower snake keys', function () {

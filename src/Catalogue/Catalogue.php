@@ -15,7 +15,7 @@ class Catalogue
     {
         foreach ($catalogues as $catalogue) {
             foreach ($catalogue::keys() as $key) {
-                if (! preg_match('/\A[a-z]+(?:_[a-z]+)*\.[a-z]+(?:_[a-z]+)*\.[a-z]+(?:_[a-z]+)*\z/', $key)) {
+                if (! preg_match('/\A[a-z]+(?:_[a-z]+)*(?:\.[a-z]+(?:_[a-z]+)*){1,3}\z/', $key)) {
                     throw new InvalidArgumentException("Invalid permission key: {$key}");
                 }
 
