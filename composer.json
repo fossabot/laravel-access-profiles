@@ -1,6 +1,6 @@
 {
     "name": "seisigmasrl/laravel-access-profiles",
-    "description": "Scoped access profiles for multi-tenant Laravel apps: per-scope assignments, deny rules, validity windows and an audit trail, on top of Laravel's Gate.",
+    "description": "Scoped access profiles for multi-tenant Laravel apps: per-scope assignments, deny rules, validity windows and an audit trail, next to Laravel's Gate.",
     "keywords": [
         "seisigma",
         "laravel",

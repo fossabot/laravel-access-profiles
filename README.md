@@ -1,6 +1,6 @@
 # Laravel Access Profiles
 
-**Status: built in 0.1.0; unreleased.** Requires PHP 8.3+ and Laravel 12.69+ or 13.30+. See [Supported versions](#supported-versions).
+**Status: released 0.1.0 (2026-10-28).** Requires PHP 8.3+ and Laravel 12.69+ or 13.30+. See [Supported versions](#supported-versions).
 
 Give people different permissions in different parts of a tenant. Profiles combine allow and deny rules. Assignments cover a whole tenant or selected scopes, with validity dates and a record of who granted access and why. Any matching deny wins. Access is denied by default.
 
