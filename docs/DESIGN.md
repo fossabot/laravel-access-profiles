@@ -1,6 +1,6 @@
 # laravel-access-profiles — Design
 
-Status: **released 0.1.0** (2026-10-28; decisions in §9).
+Status: released. See [CHANGELOG.md](../CHANGELOG.md). Decisions are in §9.
 Package: `seisigmasrl/laravel-access-profiles`. Requires PHP 8.3+ and Laravel 12.69+ or 13.30+.
 The package includes the resolver, models, builders, queries, events and commands described below.
 
@@ -26,7 +26,7 @@ Existing packages cover one tenant dimension, or deny, or a role list — not al
 | **Holder** | Who receives access. Any Eloquent model that is `Authorizable` (normally `User`). Morph. | `access_assignments.holder_*` |
 | **Tenant** | The boundary that owns profiles and assignments. Any Eloquent model. Morph. | `*.tenant_*` |
 | **Scope** | A model inside a tenant that an assignment can be limited to. Any Eloquent model. Morph. Optional. | `access_assignment_scopes.scope_*` |
-| **Catalogue** | Every permission key the app knows, **in code**: a backed enum implementing `PermissionCatalogue`. Keys look like `module.resource.action` (`billing.invoice.approve`). | PHP class, listed in `config('access-profiles.catalogues')` |
+| **Catalogue** | Every permission key the app knows, **in code**: a backed enum implementing `PermissionCatalogue`. Keys have 2 to 4 lower-snake segments: `billing.refund`, `billing.invoice.void`, `billing.invoice.void.request`. | PHP class, listed in `config('access-profiles.catalogues')` |
 | **Profile** | A named set of rules. Each rule = permission key + effect (`allow` or `deny`). | `access_profiles`, `access_profile_permissions` |
 | **System template** | A profile with `tenant = null` and `is_system = true`. Defined in code, synced to the database by a command. Read-only at runtime. | `access_profiles` |
 | **Tenant copy** | A profile a tenant owns. Usually copied from a template (`based_on_id`) and then edited. | `access_profiles` |
