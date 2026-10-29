@@ -3,13 +3,13 @@
 Checked on **2026-10-28** against these exact versions. Every cell links to the doc or source line it is based on.
 "—" means the feature does not exist in that version (searched in docs and `src/`).
 
-| | Version checked | Released |
-|---|---|---|
-| **laravel-access-profiles** | [0.1.0](../CHANGELOG.md) | 2026-10-28 ([Packagist](https://packagist.org/packages/seisigmasrl/laravel-access-profiles)) |
-| [`spatie/laravel-permission`](https://github.com/spatie/laravel-permission/tree/8.3.2) | 8.3.2 (current major 8) | 2026-10-19 ([Packagist](https://repo.packagist.org/p2/spatie/laravel-permission.json)) |
-| [`silber/bouncer`](https://github.com/JosephSilber/bouncer/tree/v1.0.4) | v1.0.4 | 2026-03-18 ([Packagist](https://repo.packagist.org/p2/silber/bouncer.json)) |
-| [`santigarcor/laratrust`](https://github.com/santigarcor/laratrust/tree/8.5.6) | 8.5.6 | 2026-10-22 ([Packagist](https://repo.packagist.org/p2/santigarcor/laratrust.json)) |
-| Laravel Gate + policies | Laravel 13.x | built in ([docs](https://laravel.com/docs/13.x/authorization)) |
+| | Version checked |
+|---|---|
+| **laravel-access-profiles** | [0.1.0](../CHANGELOG.md) ([Packagist](https://packagist.org/packages/seisigmasrl/laravel-access-profiles)) |
+| [`spatie/laravel-permission`](https://github.com/spatie/laravel-permission/tree/8.3.2) | 8.3.2 (current major 8) ([Packagist](https://repo.packagist.org/p2/spatie/laravel-permission.json)) |
+| [`silber/bouncer`](https://github.com/JosephSilber/bouncer/tree/v1.0.4) | v1.0.4 ([Packagist](https://repo.packagist.org/p2/silber/bouncer.json)) |
+| [`santigarcor/laratrust`](https://github.com/santigarcor/laratrust/tree/8.5.6) | 8.5.6 ([Packagist](https://repo.packagist.org/p2/santigarcor/laratrust.json)) |
+| Laravel Gate + policies | Laravel 13.x, built in ([docs](https://laravel.com/docs/13.x/authorization)) |
 
 Short links used below: **SP** = `spatie/laravel-permission@8.3.2`, **BO** = `silber/bouncer@v1.0.4`, **LT** = `santigarcor/laratrust@8.5.6`.
 
@@ -32,9 +32,9 @@ Short links used below: **SP** = `spatie/laravel-permission@8.3.2`, **BO** = `si
 | **Owner / super-admin** | No built-in bypass; access requires a matching assignment ([resolver](../src/Resolver/DatabaseResolver.php), [tests](../tests/Resolver/DecisionRulesTest.php)) | Recommends `Gate::before` ([super-admin](https://github.com/spatie/laravel-permission/blob/8.3.2/docs/basic-usage/super-admin.md)) | `everything()` | role check | `Gate::before` |
 | **Customer-editable profiles per tenant** | Template + tenant copy (`based_on_id`) ([builder](../src/Builders/ProfileBuilder.php), [tests](../tests/Builders/ProfileBuilderTest.php)) | Team roles (`team_id` on `roles`) | Scoped roles | Roles are global; teams scope the assignment (`team_id` only on `role_user` / `permission_user`: [migration](https://github.com/santigarcor/laratrust/blob/8.5.6/resources/views/migration.blade.php)) | — |
 | **Laravel versions** | 12.69+, 13.30+ (within majors 12 and 13; [composer.json](../composer.json)) | 12, 13 | 11, 12, 13 | 10, 11, 12, 13 | — |
-| **Maintenance** | Initial 0.1.0 release, 2026-10-28 ([changelog](../CHANGELOG.md)) | Active: 8.3.0 (2026-07-03), 8.3.1 + 8.3.2 (2026-10-19) | Slow: v1.0.2 (2024-03-14), v1.0.3 (2025-02-24), v1.0.4 (2026-03-18) | Active: 8.5.4 (2026-02-23), 8.5.5 (2026-03-06), 8.5.6 (2026-10-22) | Laravel core |
+| **Maintenance** | New ([changelog](../CHANGELOG.md)) | Active: 8.3.0 (2026-07-03), 8.3.1 + 8.3.2 (2026-10-19) | Slow: v1.0.2 (2024-03-14), v1.0.3 (2025-02-24), v1.0.4 (2026-03-18) | Active: 8.5.4 (2026-02-23), 8.5.5 (2026-03-06), 8.5.6 (2026-10-22) | Laravel core |
 
-Release dates come from the Packagist metadata linked in the version table.
+Maintenance dates for the other packages come from the Packagist metadata linked in the version table.
 
 ## Reading the table honestly
 
